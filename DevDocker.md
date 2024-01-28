@@ -8,3 +8,5 @@
 #### List of Important Documents
 
 #### [Initial setup Steps](./DevDocker/InintialSteps.md)
+
+#### [Docker Setup & Cpmfiguration](./DevDocker/DockerSetup.md)
