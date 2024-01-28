@@ -1,4 +1,9 @@
 # Infrastrure Developmet Documentation
 
 ### Scope
-##### Tjos Repo is maintaining Development and production related Infra strucre documentation which leps users to manage these machines. This Documentation is structured in sucha  a Way that Every Machine which has certain scope and objective its different Area's configuration & steps is being maintainer.
+##### This repo maintains development and production-related infrastructure documentation that helps users manage these machines. The documentation is structured in a way that each machine has its own scope and objectives, with different areas of configuration and steps being maintained.
+
+### List of Machines
+#### [DevDocker](./DevDocker.md)
+
+#### DevDocker 
