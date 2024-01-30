@@ -38,5 +38,19 @@ $ chmod 600 ~/.ssh/authorized_keys
 - sudo timedatectl set-timezone Asia/Kolkata
 - #### How to check current timezone for os?
 - timedatectl | grep "Time zone"
-- #### 
+- #### How to check disk usage ?
+- - df -h
+- #### How to view Failed Logs for ssh ?
+- sudo grep -i 'failed' /var/log/auth.log
+#### To display the last few lines of the log file:
+- sudo tail /var/log/auth.log
+- #### To display the entire log file and navigate through it:
+- - sudo less /var/log/auth.log
+#### Show all Systemlogs.
+-sudo journalctl -xe
+#### Show all logs from systemlogs for ssg only.
+- sudo journalctl -u ssh
+- #### Show only IP Address ?
+- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
+- 
 
