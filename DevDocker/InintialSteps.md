@@ -33,5 +33,10 @@ $ echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQ...' >> ~/.ssh/authorized_keys
 #### eplace 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQ...' with the contents of your public key file. You can get these contents by opening the file in a text editor on your Windows machine.
 $ chmod 600 ~/.ssh/authorized_keys
 
-
+### Basic Command List
+#### How to set current timezone to India?
+- sudo timedatectl set-timezone Asia/Kolkata
+- #### How to check current timezone for os?
+- timedatectl | grep "Time zone"
+- #### 
 
