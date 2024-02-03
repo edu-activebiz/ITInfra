@@ -181,9 +181,9 @@ If telnet gets connected your docker should be working otherwise check firewall 
 ### Docker Command HandToolSet
 
 #### To Delete all Running Container Forcefully
-- docker rm -f $(docker ps -a -q)
+- `docker rm -f $(docker ps -a -q)`
 - #### Delete all Images
-- docker rmi -f $(docker images -q)
+- `docker rmi -f $(docker images -q)`
 - #### Delete all Volumes which are not IIn Use
-- docker stop $(docker ps -a -q)
-docker volume rm $(docker volume ls -q)
+- `docker stop $(docker ps -a -q)`
+   `docker volume rm $(docker volume ls -q)` 
