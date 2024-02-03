@@ -1,6 +1,6 @@
 ## DevDocker Docker Setup and Configuration 
 
-### Ste[s tp Install Docker]
+### Steps to Install Docker]
 
 - sudo apt-get update
 - sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release software-properties-common
@@ -16,130 +16,166 @@
 - sudo usermod -aG docker newusername
 
 
-### Secure Docker Deamon:
+## Secure Docker Deamon:
 
-To enable and enforce TLS for your Docker daemon, you need to generate certificates and keys, and then configure Docker to use them. Here are the steps:
+### Create Certificates
+### Server Certificate Generation
 
-1. **Generate CA Private and Public Keys:**
-
-   First, you need to generate a private key for your Certificate Authority (CA). You can do this with the `openssl` command:
-
-   ```bash
-   openssl genrsa -aes256 -out ca-key.pem 4096
-   ```
-
-   Then, generate a public key from the private key:
-
-   ```bash
-   openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem
-   ```
-
-   When running this command, you'll be asked for various pieces of information. These can be left blank.
-
-2. **Generate Server Keys:**
-
-   Next, create a server key and certificate signing request (CSR) for the Docker daemon:
-
-   ```bash
-   openssl genrsa -out server-key.pem 4096
-   openssl req -subj "/CN=<your-hostname>" -sha256 -new -key server-key.pem -out server.csr
-   ```
-
-   Replace `<your-hostname>` with the hostname of your Docker daemon.
-
-   Then, create an extensions file `server-extfile.cnf` for the server:
-
-   ```bash
-   echo subjectAltName = DNS:<your-hostname>,IP:<your-ip>,IP:127.0.0.1 > server-extfile.cnf
-   ```
-
-   Replace `<your-hostname>` with the hostname of your Docker daemon, and `<your-ip>` with its IP address.
-
-   Now, sign the public key:
-
-   ```bash
-   openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile server-extfile.cnf
-   ```
-
-3. **Generate Client Keys:**
-
-   Similar to the server keys, create a client key and CSR:
-
-   ```bash
-   openssl genrsa -out key.pem 4096
-   openssl req -subj '/CN=client' -new -key key.pem -out client.csr
-   ```
-
-   Then, create an extensions file `client-extfile.cnf` for the client:
-
-   ```bash
-   echo extendedKeyUsage = clientAuth > client-extfile.cnf
-   ```
-
-   Now, sign the public key:
-
-   ```bash
-   openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile client-extfile.cnf
-   ```
-
-4. **Secure the Keys:**
-
-   Set restrictive permissions on the keys:
-
-   ```bash
-   chmod -v 0400 ca-key.pem key.pem server-key.pem
-   chmod -v 0444 ca.pem server-cert.pem cert.pem
-   ```
-
-5. **Configure Docker Daemon:**
-
-   Finally, configure Docker to use the certificates:
-
-   ```bash
-   dockerd --tlsverify --tlscacert=ca.pem --tlscert=server-cert.pem --tlskey=server-key.pem -H=0.0.0.0:2376
-   ```
-
-   This command starts Docker daemon with TLS enabled and configured to use the generated certificates and keys.
-
-Remember to replace the placeholders in the commands with your actual values. Also, these commands should be run on the Docker daemon host.
+Note
+Replace all instances of $HOST in the following example with the DNS name of your Docker daemon's host.
 
 
+-$ `openssl genrsa -aes256 -out ca-key.pem 4096`
+Generating RSA private key, 4096 bit long modulus
+Generating RSA private key, 4096 bit long modulus
+..............................................................................++
+........++
+e is 65537 (0x10001)
+Enter pass phrase for ca-key.pem:
+Verifying - Enter pass phrase for ca-key.pem:
 
-*************************************
-*************************************
-***********************************
+-$ `openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem`  
+Enter pass phrase for ca-key.pem:
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:
+State or Province Name (full name) [Some-State]:Queensland
+Locality Name (eg, city) []:Brisbane
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Docker Inc
+Organizational Unit Name (eg, section) []:Sales
+Common Name (e.g. server FQDN or YOUR name) []:$HOST
+Email Address []:Sven@home.org.au
 
+   Now that you have a CA, you can create a server key and certificate signing request (CSR). Make sure that "Common Name" matches the hostname you use to connect to Docker:
 
-Yes, both the server and client certificates can be generated on the server. After generating, you can move the client-related certificates (client-cert.pem and client-key.pem) to the client machine.
+-$ `openssl genrsa -out server-key.pem 4096`
+Generating RSA private key, 4096 bit long modulus
+.....................................................................++
+.................................................................................................++
+e is 65537 (0x10001)
 
-Here are the steps to move the client certificates to a Windows client machine:
+- $ `openssl req -subj "/CN=$HOST" -sha256 -new -key server-key.pem -out server.csr`
+  Next, we're going to sign the public key with our CA:
 
-1. **Generate Certificates:** Follow the steps in the previous response to generate the server and client certificates on the server.
+Since TLS connections can be made through IP address as well as DNS name, the IP addresses need to be specified when creating the certificate. For example, to allow connections using 10.10.10.20 and 127.0.0.1: Here in sted of 10.10.10.20
+you can provide private ip address of server and inplace of $HOST provide u r dns that points to this server via public ip.
 
-2. **Transfer Certificates:** You can use a secure method like SCP (Secure Copy) to transfer the client certificates from the server to the client machine. If you have an SCP client installed on your Windows machine, you can use a command like this:
+- $ `echo subjectAltName = DNS:$HOST,IP:10.10.10.20,IP:127.0.0.1 >> extfile.cnf`
+Set the Docker daemon key's extended usage attributes to be used only for server authentication:
 
-   ```bash
-   scp user@your-server:/path/to/cert.pem /local/path
-   scp user@your-server:/path/to/key.pem /local/path
-   ```
+- $ `echo extendedKeyUsage = serverAuth >> extfile.cnf`
 
-   Replace `user@your-server` with your username and server address, `/path/to/cert.pem` and `/path/to/key.pem` with the paths to the client certificates on the server, and `/local/path` with the path where you want to store the certificates on your Windows machine.
+Now, generate the signed certificate:
 
-3. **Configure Docker Client:** On the Windows machine, set the `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, and `DOCKER_CERT_PATH` environment variables to configure the Docker client to use TLS:
+- $ `openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem \
+  -CAcreateserial -out server-cert.pem -extfile extfile.cnf`
 
-   ```powershell
-   $env:DOCKER_HOST = 'tcp://your-server:2376'
-   $env:DOCKER_TLS_VERIFY = '1'
-   $env:DOCKER_CERT_PATH = 'C:\path\to\certs'
-   ```
+  Signature ok
+subject=/CN=your.host.com
+Getting CA Private Key
+Enter pass phrase for ca-key.pem:
 
-   Replace `your-server` with your server address and `C:\path\to\certs` with the path to the directory containing the client certificates.
+### Client Certificate Generation
 
-Remember, the client certificates contain sensitive information. Make sure to transfer them securely and store them in a secure location on the client machine.
+For client authentication, create a client key and certificate signing request:
 
-*************************************
-***********************************
-************************************
+- $ `openssl genrsa -out key.pem 4096`
+Generating RSA private key, 4096 bit long modulus
+.........................................................++
+................++
+e is 65537 (0x10001)
+
+- $ `openssl req -subj '/CN=client' -new -key key.pem -out client.csr`
+
+To make the key suitable for client authentication, create a new extensions config file:
+
+- $ `echo extendedKeyUsage = clientAuth > extfile-client.cnf`
+
+Now, generate the signed certificate:
+
+- $ `openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem \
+  -CAcreateserial -out cert.pem -extfile extfile-client.cnf`
+Signature ok
+subject=/CN=client
+Getting CA Private Key
+Enter pass phrase for ca-key.pem:
+
+After generating cert.pem and server-cert.pem you can safely remove the two certificate signing requests and extensions config files:
+
+- $ `rm -v client.csr server.csr extfile.cnf extfile-client.cnf`
+
+With a default umask of 022, your secret keys are world-readable and writable for you and your group.
+
+To protect your keys from accidental damage, remove their write permissions. To make them only readable by you, change file modes as follows:
+
+- $ `chmod -v 0400 ca-key.pem key.pem server-key.pem`
+
+Certificates can be world-readable, but you might want to remove write access to prevent accidental damage:
+
+- $ `chmod -v 0444 ca.pem server-cert.pem cert.pem`
+
+After you complete these steps, ensure that the following five files are generated.
+ca.pem
+server-cert.pem
+server-key.pem
+cert.pem
+key.pem
+
+## Configure docker deamon for tls
+
+Below you can find the procedure of configuring docker to listen to TCP 2376 by using the systemctl method. systemctl is the most popular tool to configure the way apps start and run in Linux. You can later mix this method with other options, such as configuring docker to start each time the Operating System starts. If you tried the first method (by using the daemon.json file) and it did not work, you need to delete the folder /etc/docker/ before you try the second method.
+
+rocedure:
+1. Use the `sudo nano /etc/systemd/system/docker.service.d/override.conf` command to open an override file for docker service in a text editor.
+2. Add or modify the following lines, substituting your own machine static IP
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=<location of ca certificate> --tlscert=<location of server certificate> --tlskey=<location of server key>
+e.g.:ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=/home/nilkanth/ca2/ca.pem --tlscert=/home/nilkanth/ca2/server-cert.pem --tlskey=/home/nilkanth/ca2/server-key.pem
+
+Important: Do not remove the first line that contains ExecStart=. It needs to remain with an empty value.
+
+3. Once the file is saved, you can exit the systemctl tool by using Ctrl+X > Y/y > Enter.
+4. Reload the systemctl configuration by using the following command
+`sudo systemctl daemon-reload`
+
+5. Restart the Docker service by using the following command
+   `sudo systemctl restart docker.service`
+
+6. To check whether the changes were successfully applied or that docker is listening on the configured port, use the following command.
+   `sudo netstat -lntp | grep dockerd`
+
+## Configure docker on client (Windows PC)
+
+First Install docker desktop or equvelent docker ce version on windows machine without any Virtual machine or any
+other virtual support. Then follow below steps.
+
+1. Copy necessary 3 certificate files from server which you had create in above steps to your local folder using following command.
+2. `c:dev\py\cert>Copy ca.pem, cert.pem & key.pem to this location`
+
+3. Set below variables as Enviornment variables in windows using System Properties --> Environment Variables. Here add follwoing three valriables and set its values accordingly.
+
+  `DOCKER_CERT_PATH=c:\dev\py\cert1\  (location where you store certificates from server)
+DOCKER_HOST=tcp://$HOST:2376
+DOCKER_TLS_VERIFY='1'`
+
+4. Test the docker client using following two commands. If tls is configured correctly or not?
+   `c:\dev\py\cert1>docker info`
+   `c:\dev\py\cert1>docker ps`
+
+5. To troubleshoot make sure port 2376 is allowed on server and client firewalls. and check using following tool.
+`c:\dev\py\cert1>telnet $HOST 2376`
+
+If telnet gets connected your docker should be working otherwise check firewall on server and client.
+
+***
+
 
 
 ### Docker Command HandToolSet

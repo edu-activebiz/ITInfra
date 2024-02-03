@@ -53,4 +53,4 @@ $ chmod 600 ~/.ssh/authorized_keys
 - #### Show only IP Address ?
 - ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
 - 
-
+#### 
