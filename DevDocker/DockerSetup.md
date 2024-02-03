@@ -25,7 +25,7 @@ Note
 Replace all instances of $HOST in the following example with the DNS name of your Docker daemon's host.
 
 
--$ `openssl genrsa -aes256 -out ca-key.pem 4096`
+- $ `openssl genrsa -aes256 -out ca-key.pem 4096`
 Generating RSA private key, 4096 bit long modulus
 Generating RSA private key, 4096 bit long modulus
 ..............................................................................++
@@ -34,7 +34,7 @@ e is 65537 (0x10001)
 Enter pass phrase for ca-key.pem:
 Verifying - Enter pass phrase for ca-key.pem:
 
--$ `openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem`  
+- $ `openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem`  
 Enter pass phrase for ca-key.pem:
 You are about to be asked to enter information that will be incorporated
 into your certificate request.
@@ -53,7 +53,7 @@ Email Address []:Sven@home.org.au
 
    Now that you have a CA, you can create a server key and certificate signing request (CSR). Make sure that "Common Name" matches the hostname you use to connect to Docker:
 
--$ `openssl genrsa -out server-key.pem 4096`
+- $ `openssl genrsa -out server-key.pem 4096`
 Generating RSA private key, 4096 bit long modulus
 .....................................................................++
 .................................................................................................++
